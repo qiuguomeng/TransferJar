@@ -44,52 +44,51 @@ public class InteractionSocket {
         return interactionSocket;
     }
 
-    public void request(int id,final CommandBeans commandBeans1) {
-        CommandBeans commandBeans2 = commandBeans1;
-        Log.i("InteractionSocket.id:"+id,commandBeans2);
-        switch (commandBeans2.operateType){
+    public void request(/*int id,*/final CommandBeans commandBeans1) {
+        Log.i("InteractionSocket.id:"+commandBeans1.id,commandBeans1);
+        switch (commandBeans1.operateType){
             case PUSH_TYPE:
-                File file1 = new File(commandBeans2.srcFileName);
+                File file1 = new File(commandBeans1.srcFileName);
                 if (file1.exists()){
-                    sendCommand("push:"+commandBeans2.desFileName+","+file1.length());
+                    sendCommand("push:"+commandBeans1.desFileName+","+file1.length());
                 }else {
-                    commandBeans2.interactionInterface.pushFeedback(false,id);
+                    commandBeans1.interactionInterface.pushFeedback(false,commandBeans1.id);
                     return;
                 }
                 try {
                     long serverFileLength = Long.parseLong(commandProcess("UTF-8"));
-                    new TransferThread(id,commandBeans2,serverFileLength);
+                    new TransferThread(/*commandBeans1.id,*/commandBeans1,serverFileLength);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 break;
             case PULL_TYPE:
-                File file2 =  new File(commandBeans2.desFileName);
+                File file2 =  new File(commandBeans1.desFileName);
                 long localFileLength = 0;
                 if (file2.exists()) {
                     localFileLength = file2.length();
                 }
-                sendCommand("pull:"+commandBeans2.srcFileName+","+localFileLength);//locaFileLength表示从服务器开始读取的字节
-                new TransferThread(id,commandBeans2,localFileLength);
+                sendCommand("pull:"+commandBeans1.srcFileName+","+localFileLength);//locaFileLength表示从服务器开始读取的字节
+                new TransferThread(/*commandBeans1.id,*/commandBeans1,localFileLength);
                 break;
             case READ_TYPE:
-                sendCommand("read:"+commandBeans2.desFileName);
+                sendCommand("read:"+commandBeans1.desFileName);
                 try {
                     String result = commandProcess("UTF-8");
                     String[] results = result.split(",");
-                    commandBeans2.interactionInterface.readFeedback(results,id);
+                    commandBeans1.interactionInterface.readFeedback(results,commandBeans1.id);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 break;
             case MOVE_TYPE:
                 try {
-                    sendCommand("move:"+commandBeans2.srcFileName+","+commandBeans2.desFileName);
+                    sendCommand("move:"+commandBeans1.srcFileName+","+commandBeans1.desFileName);
                     int status = Integer.parseInt(commandProcess("UTF-8"));
                     if (status == 0){
-                        commandBeans2.interactionInterface.moveFeedback(false,id);
+                        commandBeans1.interactionInterface.moveFeedback(false,commandBeans1.id);
                     }else {
-                        commandBeans2.interactionInterface.moveFeedback(true,id);
+                        commandBeans1.interactionInterface.moveFeedback(true,commandBeans1.id);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -97,12 +96,12 @@ public class InteractionSocket {
                 break;
             case DELETE_TYPE:
                 try {
-                    sendCommand("delete:"+commandBeans2.desFileName);
+                    sendCommand("delete:"+commandBeans1.desFileName);
                     int status = Integer.parseInt(commandProcess("UTF-8"));
                     if (status == 0){
-                        commandBeans2.interactionInterface.deleteFeedback(false,id);
+                        commandBeans1.interactionInterface.deleteFeedback(false,commandBeans1.id);
                     }else {
-                        commandBeans2.interactionInterface.deleteFeedback(true,id);
+                        commandBeans1.interactionInterface.deleteFeedback(true,commandBeans1.id);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -110,12 +109,12 @@ public class InteractionSocket {
                 break;
             case MKDIR_TYPE:
                 try {
-                    sendCommand("mkDir:"+commandBeans2.desFileName);
+                    sendCommand("mkDir:"+commandBeans1.desFileName);
                     int status = Integer.parseInt(commandProcess("UTF-8"));
                     if (status == 0){
-                        commandBeans2.interactionInterface.makeDirectoryFeedback(false,id);
+                        commandBeans1.interactionInterface.makeDirectoryFeedback(false,commandBeans1.id);
                     }else {
-                        commandBeans2.interactionInterface.makeDirectoryFeedback(true,id);
+                        commandBeans1.interactionInterface.makeDirectoryFeedback(true,commandBeans1.id);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -189,11 +188,11 @@ public class InteractionSocket {
     }
 
     class TransferThread extends Thread{
-        private int id;
+//        private int id;
         private CommandBeans commandBeans;
         private long startTransferPoint;
-        public TransferThread(int id,CommandBeans commandBeans,long startTransferPoint){
-            this.id = id;
+        public TransferThread(/*int id,*/CommandBeans commandBeans,long startTransferPoint){
+//            this.id = id;
             this.commandBeans = commandBeans;
             this.startTransferPoint = startTransferPoint;
             this.start();
@@ -202,10 +201,10 @@ public class InteractionSocket {
         public void run() {
             switch (commandBeans.operateType) {
                 case InteractionSocket.PUSH_TYPE:
-                    commandBeans.interactionInterface.pushFeedback(FileUtil.push(commandBeans.srcFileName,startTransferPoint),id);
+                    commandBeans.interactionInterface.pushFeedback(FileUtil.push(commandBeans.srcFileName,startTransferPoint),/*id*/commandBeans.id);
                     break;
                 case InteractionSocket.PULL_TYPE:
-                    commandBeans.interactionInterface.pullFeedback(FileUtil.pull(commandBeans.desFileName,startTransferPoint),id);
+                    commandBeans.interactionInterface.pullFeedback(FileUtil.pull(commandBeans.desFileName,startTransferPoint),/*id*/commandBeans.id);
                     break;
             }
         }
